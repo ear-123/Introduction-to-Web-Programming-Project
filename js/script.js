@@ -1,16 +1,20 @@
 const searchButton = document.getElementById("submit-data")
 const yearSelector = document.getElementById("year")
-const dataTypeSelector = document.getElementById("data-type")
+const dataTypeSelector = document.getElementById("main-data-type")
 
 let geoJSON = null
 let map = null
-let dataOnMap = null
 
-initDocument()
+let dataOnMap = null
+let populationData = null
+let totalChangeData = null
+let ingomingMigrationData = null
+let outgoingMigrationData = null
+let netMigrationData = null
 
 function initDocument() {
     //Create all year options
-    i = 1990
+    i = 1991
     while (true) {
         let option = document.createElement("option")
         option.value = i
@@ -24,7 +28,6 @@ function initDocument() {
 
     searchButton.addEventListener("click", () => updateMap())
 
-    //setup map
     initMap()
 
 }
@@ -41,27 +44,93 @@ async function updateMap() {
         attribution: "© OpenStreetMap"
     }).addTo(map)
 
-    const year = yearSelector.value
-    const dataType = dataTypeSelector.value
+    //console.log(document.getElementById("population").checked)
     //console.log(year)
     //console.log(dataType)
+    //console.log(querryJSON.query[0].selection.values[0])
 
-    const url = "https://statfin.stat.fi:443/PxWeb/api/v1/fi/StatFin/synt/statfin_synt_pxt_12dy.px"
-    const response = await fetch(url, {
-        method: "POST",
-        headers: {"content-type": "application/json"},
-        body: JSON.stringify(querryJSON)
-    })
-    dataOnMap = await response.json()
-    
-    console.log(dataOnMap)
+    let querry = querryJSON
+    querry.query[0].selection.values[0] = yearSelector.value
+
+
+    //get needed data from API
+    if (document.getElementById("population").checked) {
+        let populationQuerry = querry
+        populationQuerry.query[2].selection.values[0] = "vaesto"
+        populationData = await getDataFromAPI(populationQuerry)
+    }
+    if (document.getElementById("total-change").checked) {
+        let totalChangeQuerry = querry
+        totalChangeQuerry.query[2].selection.values[0] = "kokmuutos"
+        totalChangeData = await getDataFromAPI(totalChangeQuerry)
+    }
+    if (document.getElementById("ingoming-migration").checked) {
+        let ingomingMigrationQuerry = querry
+        ingomingMigrationQuerry.query[2].selection.values[0] = "vm43_tulo"
+        ingomingMigrationData = await getDataFromAPI(ingomingMigrationQuerry)
+    }
+    if (document.getElementById("outgoing-migration").checked) {
+        let outgoingMigrationQuerry = querry
+        outgoingMigrationQuerry.query[2].selection.values[0] = "vm43_lahto"
+        outgoingMigrationData = await getDataFromAPI(outgoingMigrationQuerry)
+    }
+    if (document.getElementById("net-migration").checked) {
+        netMigrationQuerry = querry
+        netMigrationQuerry.query[2].selection.values[0] = "vm43_netto"
+        netMigrationData = await getDataFromAPI(netMigrationQuerry)
+    }
+
+
+    //Get data that displays on map
+    const dataType = dataTypeSelector.value
+    let dataOnMapQuerry = querry
+    switch (dataType) {
+        case "population":
+            dataOnMapQuerry.query[2].selection.values[0] = "vaesto"
+            break
+
+        case "total-change":
+            dataOnMapQuerry.query[2].selection.values[0] = "kokmuutos"
+            break
+
+        case "ingoming-migration":
+            dataOnMapQuerry.query[2].selection.values[0] = "vm43_tulo"
+            break
+
+        case "outgoing-migration":
+            dataOnMapQuerry.query[2].selection.values[0] = "vm43_lahto"
+            break
+
+        case "net-migration":
+            dataOnMapQuerry.query[2].selection.values[0] = "vm43_netto"
+            break
+        
+        default:
+            break
+    }
+    dataOnMap = await getDataFromAPI(dataOnMapQuerry)
+    //console.log(dataOnMap)
+
 
     let geojason = L.geoJSON(geoJSON, {
         weight: 2,
         onEachFeature: setTooltips
     }).addTo(map)
     map.fitBounds(geojason.getBounds())
+
     //console.log(map);
+
+}
+
+async function getDataFromAPI(querry) {
+    const url = "https://statfin.stat.fi:443/PxWeb/api/v1/fi/StatFin/synt/statfin_synt_pxt_12dy.px"
+    const response = await fetch(url, {
+        method: "POST",
+        headers: {"content-type": "application/json"},
+        body: JSON.stringify(querry)
+    })
+    data = await response.json()
+    return data
 }
 
 async function initMap() {
@@ -69,22 +138,46 @@ async function initMap() {
     const dataPromise1 = await fetch(url1)
     geoJSON = await dataPromise1.json()
 
-    console.log(geoJSON);
+    //console.log(geoJSON)
 
     updateMap()
 }
 
 function setTooltips(feature, layer) {
-    console.log(feature.properties.kunta)
-    layer.bindTooltip(feature.properties.nimi)
-    layer.bindPopup(
-        `<ul>
-            <li>${feature.properties.nimi}</li>
-        </ul>`
+    //console.log(feature.properties.kunta)
+    let name = feature.properties.nimi
+    let dataValue = getDataByName(name, dataOnMap)
+    layer.bindTooltip(name + ": " + dataValue)
 
-    )
+    let popup = `<ul><li>${name}</li>`
+
+    //Add selected data to popup
+    if (document.getElementById("population").checked) {
+        popup = popup + `<li>Väkiluku: ${getDataByName(name, populationData)}</li>`
+    }
+    if (document.getElementById("total-change").checked) {
+        popup = popup + `<li>Kokonaismuutos: ${getDataByName(name, totalChangeData)}</li>`
+    }
+    if (document.getElementById("ingoming-migration").checked) {
+        popup = popup + `<li>Tulomuutto: ${getDataByName(name, ingomingMigrationData)}</li>`
+    }
+    if (document.getElementById("outgoing-migration").checked) {
+        popup = popup + `<li>Lähtömuutto: ${getDataByName(name, outgoingMigrationData)}</li>`
+    }
+    if (document.getElementById("net-migration").checked) {
+        popup = popup + `<li>Nettomuutto: ${getDataByName(name, netMigrationData)}</li>`
+    }
+
+    popup = popup + `</ul>`
+    layer.bindPopup(popup)
 }
 
+function getDataByName(name, dataSet) {
+    let nameList = Object.values(dataSet.dimension.Alue.category.label)
+    let i = nameList.indexOf(name)
+    let data = dataSet.value[i]
+    return data
+}
 
 let querryJSON = {
     "query": [
@@ -93,14 +186,14 @@ let querryJSON = {
         "selection": {
           "filter": "item",
           "values": [
-            "2023"
+            "Replace this"
           ]
         }
       },
       {
         "code": "Alue",
         "selection": {
-          "filter": "agg:_Kunnat tunnusjärjestyksessä tunnuksineen 2024.agg",
+          "filter": "agg:_Kunnat aakkosjärjestyksessä 2024.agg",
           "values": [
             "SSS",
             "KU005",
@@ -420,7 +513,7 @@ let querryJSON = {
         "selection": {
           "filter": "item",
           "values": [
-            "vaesto"
+            "Replace this"
           ]
         }
       }
@@ -429,3 +522,5 @@ let querryJSON = {
       "format": "json-stat2"
     }
   }
+  
+initDocument()
