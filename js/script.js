@@ -14,7 +14,7 @@ let netMigrationData = null
 
 function initDocument() {
     //Create all year options
-    i = 1991
+    i = 1990
     while (true) {
         let option = document.createElement("option")
         option.value = i
@@ -82,9 +82,9 @@ async function updateMap() {
 
 
     //Get data that displays on map
-    const dataType = dataTypeSelector.value
+    const mapDataType = dataTypeSelector.value
     let dataOnMapQuerry = querry
-    switch (dataType) {
+    switch (mapDataType) {
         case "population":
             dataOnMapQuerry.query[2].selection.values[0] = "vaesto"
             break
@@ -114,7 +114,8 @@ async function updateMap() {
 
     let geojason = L.geoJSON(geoJSON, {
         weight: 2,
-        onEachFeature: setTooltips
+        onEachFeature: setTooltips,
+        style: getStyle
     }).addTo(map)
     map.fitBounds(geojason.getBounds())
 
@@ -144,10 +145,8 @@ async function initMap() {
 }
 
 function setTooltips(feature, layer) {
-    //console.log(feature.properties.kunta)
     let name = feature.properties.nimi
-    let dataValue = getDataByName(name, dataOnMap)
-    layer.bindTooltip(name + ": " + dataValue)
+    layer.bindTooltip(name + ": " + getDataByName(name, dataOnMap))
 
     let popup = `<ul><li>${name}</li>`
 
@@ -170,6 +169,66 @@ function setTooltips(feature, layer) {
 
     popup = popup + `</ul>`
     layer.bindPopup(popup)
+}
+
+function getStyle(feature) {
+    let color = "#ff00ff"
+    let name = feature.properties.nimi
+    let allData = dataOnMap.value
+
+    //delete whole country value so it doesn't mess with averages
+    allData[0] = 0 
+    //console.log(allData);
+
+    let positiveSum = 0
+    let negativeSum = 0
+    let positiveTotal = 0
+    let negativeTotal = 0
+
+    allData.forEach(num => {
+        if (num < 0) {
+            negativeSum =+ num
+            negativeTotal =+ 1
+        }
+        if (num > 0) {
+            positiveSum =+ num
+            positiveTotal =+ 1
+        }
+    });
+    let positiveAverage = positiveSum/positiveTotal
+    let negativeAverage = negativeSum/negativeTotal
+    //console.log(positiveAverage);
+    //console.log(negativeAverage);
+
+    let statedata = getDataByName(name, dataOnMap)
+    let colorCutoff = document.getElementById("color-cutoff").value //0-20
+    //console.log(colorCutoff);
+
+    //Apply state color based on country averages
+    if (statedata < 0) {
+        if (statedata < negativeAverage * colorCutoff * 0.1) {
+            color = "#ff0000"
+        } else {
+            color = "#ff8080"
+        }
+    }
+    if(statedata == 0){
+        color = "#808080"
+    }
+    if (statedata > 0) {
+        if (statedata > positiveAverage  * colorCutoff * 0.1) {
+            
+            color = "#66ff33"
+        } else {
+            color = "#c6ffb3"
+            
+        }
+    }
+
+    return {
+        color: color,
+        fillOpacity: 0.5
+    }
 }
 
 function getDataByName(name, dataSet) {
@@ -521,6 +580,6 @@ let querryJSON = {
     "response": {
       "format": "json-stat2"
     }
-  }
+}
   
 initDocument()

@@ -16,49 +16,88 @@
 
 </head>
 <body>
-    <nav class="navbar">
-        <div class="container-fluid">
-            <form class="d-flex" role="search" method="get">
-                <label for="year">Valitse vuosi</label>
-                <select id="year" name="year"></select>
+    <div class="container">
+        <header>
+            <nav class="navbar navbar-expand-md">
+                <div class="container-fluid">
+                    <button class="navbar-toggler row" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+                        <div class="col">Muokkaa kartalla näytettävää dataa</div>
+                        <span class="navbar-toggler-icon col-1"></span>
+                    </button>
 
-                <label for="main-data-type">Valitse kartalla näytettävä tilasto</label>
-                <select id="main-data-type" name="main-data-type">
-                    <option value="population">Väkiluku</option>
-                    <option value="total-change">Kokonaismuutos</option>
-                    <option value="ingoming-migration">Kuntien välinen tulomuutto</option>
-                    <option value="outgoing-migration">Kuntien välinen lähtömuutto</option>
-                    <option value="net-migration">Kuntien välinen nettomuutto</option>
-                </select>
-                <div>
-                    <p>Valitse kunnasta näytettävät tilastot:</p>
-                    <label for="population">Väkiluku</label>
-                    <input type="checkbox" name="population" id="population">
-                    <br>
-                    <label for="total-change">Kokonaismuutos</label>
-                    <input type="checkbox" name="total-change" id="total-change">
-                    <br>
-                    <label for="ingoming-migration">Kuntien välinen tulomuutto</label>
-                    <input type="checkbox" name="ingoming-migration" id="ingoming-migration">
-                    <br>
-                    <label for="outgoing-migration">Kuntien välinen lähtömuutto</label>
-                    <input type="checkbox" name="outgoing-migration" id="outgoing-migration">
-                    <br>
-                    <label for="net-migration">Kuntien välinen nettomuutto</label>
-                    <input type="checkbox" name="net-migration" id="net-migration">
+                    <div class="collapse navbar-collapse" id="navbarNav">
+                        <form class="col-12" role="search" method="get">
+                            <div class="row nav-link">
+                                <label for="year" class="col-2">Vuosi</label>
+                                <select id="year" name="year" class="col-2"></select>
+            
+                                <label for="main-data-type" class="col-3">Kartalla näytettävä tilasto</label>
+                                <select id="main-data-type" name="main-data-type" class="col-4">
+                                    <option value="population">Väkiluku</option>
+                                    <option value="total-change">Kokonaismuutos</option>
+                                    <option value="ingoming-migration">Kuntien välinen tulomuutto</option>
+                                    <option value="outgoing-migration">Kuntien välinen lähtömuutto</option>
+                                    <option value="net-migration">Kuntien välinen nettomuutto</option>
+                                </select>
+                            </div>
 
-                </div>
-                
-                <button id="submit-data" type="button">Päivitä kartta</button>
-                
-            </form>
+                            <div class="nav-link">
+                                <div class="row">
+                                    <div class="col-3">Heikon värjäyksen määrä:</div>
+                                    <input class="col" type="range" id="color-cutoff" min="0" max="20">
+
+                                </div>
+                            </div>
+                            
+                            <div class="nav-link">
+                                <div class="row">
+                                    <div>Klikatusta kunnasta näytettävät tilastot:</div>
+                                    <div class="col-4 col-md-2">
+                                        <input type="checkbox" name="population" id="population">
+                                        <div for="population">Väkiluku</div>
+                                    </div>
+                                    <div class="col-4 col-md-2">
+                                        <input type="checkbox" name="total-change" id="total-change">
+                                        <div for="total-change">Kokonaismuutos</div>
+                                        
+                                    </div>
+                                    <div class="col-4 col-md-2">
+                                        <input type="checkbox" name="ingoming-migration" id="ingoming-migration">
+                                        <div for="ingoming-migration">Kuntien välinen tulomuutto</div>
+                                        
+                                    </div>
+                                    <div class="col-4 col-md-2">
+                                        <input type="checkbox" name="outgoing-migration" id="outgoing-migration">
+                                        <div for="outgoing-migration">Kuntien välinen lähtömuutto</div>
+                                        
+                                    </div>
+                                    <div class="col-4 col-md-2">
+                                        <input type="checkbox" name="net-migration" id="net-migration">
+                                        <div for="net-migration">Kuntien välinen nettomuutto</div>
+                                        
+                                    </div>
+                                    
+                                    <button id="submit-data" type="button" class="col-4 col-md-2">Päivitä kartta</button>
+                                </div>
+                                
+                                
+
+                            </div>
+                            
+                            
+                        </form>
+
+                    </div>
+                    
+                </div>    
+            </nav>
+        </header>
+
+        <div class="container">
+            <div id="map"></div>
         </div>
         
         
-    </nav>
-
-    <div id="map"></div>
-
-
+    </div>
 </body>
 </html>
