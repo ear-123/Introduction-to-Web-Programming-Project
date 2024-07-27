@@ -29,7 +29,6 @@ function initDocument() {
     searchButton.addEventListener("click", () => updateMap())
 
     initMap()
-
 }
 
 async function updateMap() {
